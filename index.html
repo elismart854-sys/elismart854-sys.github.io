@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Sinal Automático da Escola</title>
 
+  <!-- CSS INLINE -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    .caixa {
+      background: white;
+      width: 350px;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #aaa;
+    }
+
+    #relogio {
+      font-size: 32px;
+      margin: 20px 0;
+    }
+
+    #status {
+      font-size: 18px;
+      font-weight: bold;
+      color: green;
+    }
+
+    .ativo {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="caixa">
+    <h1>🔔 Sinal da Escola</h1>
+    <div id="relogio">00:00:00</div>
+    <div id="status">Aguardando horário...</div>
+  </div>
+
+  <!-- JAVASCRIPT INLINE -->
+  <script>
+    // Horários do sinal
+    const horarios = [
+      { hora: 7, minuto: 0, texto: "Início da aula" },
+      { hora: 9, minuto: 30, texto: "Recreio" },
+      { hora: 12, minuto: 0, texto: "Fim da aula" }
+    ];
+
+    let sinalAtivo = false;
+
+    function atualizarRelogio() {
+      const agora = new Date();
+      const h = agora.getHours();
+      const m = agora.getMinutes();
+      const s = agora.getSeconds();
+
+      document.getElementById("relogio").innerText =
+        String(h).padStart(2, "0") + ":" +
+        String(m).padStart(2, "0") + ":" +
+        String(s).padStart(2, "0");
+
+      verificarHorario(h, m);
+    }
+
+    function verificarHorario(hora, minuto) {
+      if (sinalAtivo) return;
+
+      for (let i = 0; i < horarios.length; i++) {
+        if (hora === horarios[i].hora && minuto === horarios[i].minuto) {
+          tocarSinal(horarios[i].texto);
+        }
+      }
+    }
+
+    function tocarSinal(texto) {
+      sinalAtivo = true;
+      const status = document.getElementById("status");
+
+      status.innerText = "🔔 Sinal ligado - " + texto;
+      status.classList.add("ativo");
+
+      // Sinal ligado por 5 segundos
+      setTimeout(function () {
+        status.innerText = "Aguardando horário...";
+        status.classList.remove("ativo");
+        sinalAtivo = false;
+      }, 5000);
+    }
+
+    setInterval(atualizarRelogio, 1000);
+  </script>
+
+</body>
+</html>
