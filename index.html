@@ -1,104 +1,221 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Sinal Automático de uma Escola</title>
+<meta charset="UTF-8">
+<title>Sistema Automático de Sirene Escolar</title>
 
-  <!-- CSS INLINE -->
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      text-align: center;
-      padding-top: 50px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: #fff;
+}
 
-    .caixa {
-      background: white;
-      width: 350px;
-      margin: auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #aaa;
-    }
+header {
+  background: rgba(0,0,0,0.3);
+  padding: 20px;
+  text-align: center;
+}
 
-    #relogio {
-      font-size: 32px;
-      margin: 20px 0;
-    }
+main {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
 
-    #status {
-      font-size: 18px;
-      font-weight: bold;
-      color: green;
-    }
+.card {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
 
-    .ativo {
-      color: red;
-    }
-  </style>
+h1, h2 {
+  margin-top: 0;
+}
+
+.relogio {
+  font-size: 48px;
+  text-align: center;
+  letter-spacing: 3px;
+}
+
+.data {
+  text-align: center;
+  opacity: 0.9;
+}
+
+.status {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.status.ativo { color: #ff5252; }
+.status.espera { color: #00e676; }
+
+button {
+  background: #00e676;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border-bottom: 1px solid rgba(255,255,255,0.3);
+  padding: 8px;
+  text-align: center;
+}
+
+input {
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+footer {
+  text-align: center;
+  padding: 15px;
+  opacity: 0.8;
+  font-size: 14px;
+}
+</style>
 </head>
 
 <body>
 
-  <div class="caixa">
-    <h1>🔔 Sinal da Escola</h1>
-    <div id="relogio">00:00:00</div>
-    <div id="status">Aguardando horário...</div>
+<header>
+  <h1>🔔 Sistema Automático de Sirene Escolar</h1>
+  <p>Automação de horários escolares</p>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="relogio" id="relogio">00:00:00</div>
+    <div class="data" id="data"></div>
+    <div class="status espera" id="status">Sistema em espera</div>
+    <br>
+    <button onclick="ativarSom()">Ativar sirene</button>
   </div>
 
-  <!-- JAVASCRIPT INLINE -->
-  <script>
-    // Horários do sinal
-    const horarios = [
-      { hora: 7, minuto: 0, texto: "Início da aula" },
-      { hora: 9, minuto: 30, texto: "Recreio" },
-      { hora: 12, minuto: 0, texto: "Fim da aula" }
-    ];
+  <div class="card">
+    <h2>📅 Horários Programados</h2>
+    <table id="tabela">
+      <tr>
+        <th>Hora</th>
+        <th>Evento</th>
+      </tr>
+    </table>
+  </div>
 
-    let sinalAtivo = false;
+  <div class="card">
+    <h2>➕ Adicionar Novo Horário</h2>
+    <input type="time" id="horaNova">
+    <input type="text" id="eventoNovo" placeholder="Descrição do evento">
+    <button onclick="adicionarHorario()">Adicionar</button>
+  </div>
 
-    function atualizarRelogio() {
-      const agora = new Date();
-      const h = agora.getHours();
-      const m = agora.getMinutes();
-      const s = agora.getSeconds();
+</main>
 
-      document.getElementById("relogio").innerText =
-        String(h).padStart(2, "0") + ":" +
-        String(m).padStart(2, "0") + ":" +
-        String(s).padStart(2, "0");
+<footer>
+  Sistema desenvolvido em HTML, CSS e JavaScript • Projeto Escolar
+</footer>
 
-      verificarHorario(h, m);
+<script>
+let horarios = [
+  { hora: "07:00", evento: "Início das aulas" },
+  { hora: "09:30", evento: "Recreio" },
+  { hora: "12:00", evento: "Fim das aulas" }
+];
+
+let audioContext, oscilador;
+let somLiberado = false;
+let sireneAtiva = false;
+
+function ativarSom() {
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  somLiberado = true;
+  document.getElementById("status").innerText = "Sirene ativada";
+}
+
+function atualizarRelogio() {
+  const agora = new Date();
+  const h = String(agora.getHours()).padStart(2,"0");
+  const m = String(agora.getMinutes()).padStart(2,"0");
+  const s = String(agora.getSeconds()).padStart(2,"0");
+
+  document.getElementById("relogio").innerText = `${h}:${m}:${s}`;
+  document.getElementById("data").innerText =
+    agora.toLocaleDateString("pt-BR", { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+
+  verificarHorario(`${h}:${m}`);
+}
+
+function verificarHorario(atual) {
+  if (!somLiberado || sireneAtiva) return;
+
+  horarios.forEach(h => {
+    if (h.hora === atual) {
+      ligarSirene(h.evento);
     }
+  });
+}
 
-    function verificarHorario(hora, minuto) {
-      if (sinalAtivo) return;
+function ligarSirene(evento) {
+  sireneAtiva = true;
+  const status = document.getElementById("status");
 
-      for (let i = 0; i < horarios.length; i++) {
-        if (hora === horarios[i].hora && minuto === horarios[i].minuto) {
-          tocarSinal(horarios[i].texto);
-        }
-      }
-    }
+  status.innerText = "🔊 Sirene ligada - " + evento;
+  status.className = "status ativo";
 
-    function tocarSinal(texto) {
-      sinalAtivo = true;
-      const status = document.getElementById("status");
+  oscilador = audioContext.createOscillator();
+  oscilador.type = "square";
+  oscilador.frequency.value = 850;
+  oscilador.connect(audioContext.destination);
+  oscilador.start();
 
-      status.innerText = "🔔 Sinal ligado - " + texto;
-      status.classList.add("ativo");
+  setTimeout(() => {
+    oscilador.stop();
+    status.innerText = "Sistema em espera";
+    status.className = "status espera";
+    sireneAtiva = false;
+  }, 5000);
+}
 
-      // Sinal ligado por 5 segundos
-      setTimeout(function () {
-        status.innerText = "Aguardando horário...";
-        status.classList.remove("ativo");
-        sinalAtivo = false;
-      }, 5000);
-    }
+function carregarTabela() {
+  const tabela = document.getElementById("tabela");
+  tabela.innerHTML = "<tr><th>Hora</th><th>Evento</th></tr>";
+  horarios.forEach(h => {
+    tabela.innerHTML += `<tr><td>${h.hora}</td><td>${h.evento}</td></tr>`;
+  });
+}
 
-    setInterval(atualizarRelogio, 1000);
-  </script>
+function adicionarHorario() {
+  const hora = document.getElementById("horaNova").value;
+  const evento = document.getElementById("eventoNovo").value;
+  if (hora && evento) {
+    horarios.push({ hora, evento });
+    carregarTabela();
+  }
+}
+
+carregarTabela();
+setInterval(atualizarRelogio, 1000);
+</script>
 
 </body>
 </html>
